@@ -1,0 +1,181 @@
+// ============================================================
+//  apps — سيرفر مستقل يخدّم متجر التطبيقات (apps.hostaka.fun)
+//  كل منطق المصادقة/قاعدة البيانات يبقى على السيرفر الرئيسي (hostaka.fun)؛
+//  هذا السيرفر واجهة + بروكسي شفاف لـ /api/* تجاهه، بنفس أسلوب
+//  orbithub/aethercast/console بالضبط.
+// ============================================================
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const fetch = require('node-fetch');
+
+const app = express();
+
+// النطاق الرئيسي لهوستاكا (وين تعيش فعلياً كل الـ API + قاعدة البيانات)
+const HOSTAKA_API_BASE = process.env.HOSTAKA_API_BASE || 'https://hostaka.fun';
+
+app.disable('x-powered-by');
+app.set('trust proxy', true);
+
+// ============================================================
+// بروكسي /api/* — نفس أسلوب orbithub/aethercast بالضبط
+// ============================================================
+app.use('/api', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) => {
+  try {
+    const targetUrl = HOSTAKA_API_BASE + '/api' + req.url;
+
+    const headers = {};
+    for (const [key, value] of Object.entries(req.headers)) {
+      if (['host', 'connection', 'content-length', 'accept-encoding'].includes(key.toLowerCase())) continue;
+      headers[key] = value;
+    }
+
+    const hasBody = req.body && Buffer.isBuffer(req.body) && req.body.length > 0;
+    const upstream = await fetch(targetUrl, {
+      method: req.method,
+      headers,
+      body: hasBody ? req.body : undefined,
+      redirect: 'manual'
+    });
+
+    res.status(upstream.status);
+    upstream.headers.forEach((value, key) => {
+      if (['content-encoding', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) return;
+      res.setHeader(key, value);
+    });
+
+    const buf = await upstream.buffer();
+    res.send(buf);
+  } catch (e) {
+    console.error('❌ apps proxy error:', e);
+    res.status(502).json({ error: 'تعذر الاتصال بخادم هوستاكا الرئيسي' });
+  }
+});
+
+// ============================================================
+// وسوم Open Graph — لما حد يشارك رابط تطبيق، نحقن عنوان ووصف
+// وأيقونة صحيحة بـ <head> قبل ما نرسل الصفحة، عشان بوتات
+// واتساب/تويتر/ديسكورد (اللي ما تنفّذ جافاسكريبت) تشوف معاينة صحيحة.
+// ============================================================
+const SITE_NAME    = 'apps';
+const DEFAULT_DESC = 'App Store من هوستاكا — تصفح ونزّل تطبيقات المجتمع، أو انشر تطبيقك.';
+const DEFAULT_IMG  = '/apps-icon.png';
+
+function ogEscape(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function ogTruncate(str, len = 160) {
+  const s = String(str || '').replace(/<[^>]*>/g, '').trim();
+  return s.length > len ? s.slice(0, len - 1) + '…' : s;
+}
+function absUrl(req, p) {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p; // أصلاً رابط مطلق (Cloudinary/imgbb غالباً)
+  // مسار نسبي: يعني مستضاف على السيرفر الرئيسي، مو على apps (مثال: أيقونات
+  // التطبيقات المرفوعة عبر /api/upload، اللي تُخزَّن وتُخدَّم من hostaka.fun)
+  return HOSTAKA_API_BASE + (p.startsWith('/') ? p : '/' + p);
+}
+// عكس absUrl: لملفات ثابتة تعيش بهذا المستودع نفسه (apps.hostaka.fun)،
+// مثل apps-icon.png — لازم تتحلّ لنفس نطاق الطلب الحالي، مو hostaka.fun
+function selfUrl(req, p) {
+  if (!p) return '';
+  if (/^https?:\/\//i.test(p)) return p;
+  return `https://${req.get('host')}${p.startsWith('/') ? p : '/' + p}`;
+}
+
+function injectOG(html, meta) {
+  const title = ogEscape(meta.title || SITE_NAME);
+  const desc  = ogEscape(meta.description || DEFAULT_DESC);
+  const image = ogEscape(meta.image || ''); // كل الاستدعاءات بهذا الملف تمرّر meta.image صريح دائماً
+  const url   = ogEscape(meta.url || '');
+  const type  = meta.type || 'website';
+  const robots = meta.robots || 'index, follow';
+
+  let tags = `<meta name="robots" content="${robots}">\n`;
+  tags += `  <meta property="og:site_name" content="${SITE_NAME}">\n`;
+  tags += `  <meta property="og:title" content="${title}">\n`;
+  tags += `  <meta property="og:description" content="${desc}">\n`;
+  tags += `  <meta property="og:image" content="${image}">\n`;
+  tags += `  <meta property="og:type" content="${type}">\n`;
+  if (url) tags += `  <meta property="og:url" content="${url}">\n`;
+  tags += `  <meta name="twitter:card" content="summary_large_image">\n`;
+  tags += `  <meta name="twitter:title" content="${title}">\n`;
+  tags += `  <meta name="twitter:description" content="${desc}">\n`;
+  tags += `  <meta name="twitter:image" content="${image}">\n`;
+
+  if (/<title>[\s\S]*?<\/title>/.test(html)) {
+    return html.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>\n  ${tags}`);
+  }
+  return html.replace('</head>', `  ${tags}</head>`);
+}
+
+function requestUrl(req) {
+  return `https://${req.get('host')}${req.originalUrl}`;
+}
+
+// صفحة تطبيق فردية (/app.html?id=TOKEN) — نجيب بيانات التطبيق من الـ API
+// العام على السيرفر الرئيسي عشان نحقن معاينة صحيحة (اسم + وصف + أيقونة)
+app.get('/app.html', async (req, res) => {
+  const meta = {
+    title: `App Store · ${SITE_NAME}`,
+    description: DEFAULT_DESC,
+    image: selfUrl(req, DEFAULT_IMG),
+    url: requestUrl(req),
+    type: 'website'
+  };
+
+  const token = (req.query.id || '').trim();
+  if (token) {
+    try {
+      const r = await fetch(`${HOSTAKA_API_BASE}/api/apps/${encodeURIComponent(token)}`);
+      if (r.ok) {
+        const appData = await r.json();
+        if (appData && !appData.error) {
+          meta.title = `${appData.name} · App Store`;
+          meta.description = ogTruncate(appData.description) || DEFAULT_DESC;
+          if (appData.icon) meta.image = absUrl(req, appData.icon);
+        }
+      }
+    } catch (e) {
+      console.error('⚠️ apps OG lookup failed for token=' + token + ':', e.message);
+      // نستمر بالميتاداتا الافتراضية عند أي خطأ — لا نكسر الصفحة بسبب هذا
+    }
+  }
+
+  const html = fs.readFileSync(path.join(__dirname, 'public', 'app.html'), 'utf-8');
+  res.set('Content-Type', 'text/html; charset=utf-8').send(injectOG(html, meta));
+});
+
+// الصفحة الرئيسية (متجر التطبيقات) — ميتاداتا ثابتة، بس نحقنها بنفس الطريقة
+// عشان يكون فيه og:url صحيح ديناميكياً
+app.get('/', (req, res) => {
+  const meta = {
+    title: `App Store · ${SITE_NAME}`,
+    description: DEFAULT_DESC,
+    image: selfUrl(req, DEFAULT_IMG),
+    url: requestUrl(req),
+    type: 'website'
+  };
+  const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf-8');
+  res.set('Content-Type', 'text/html; charset=utf-8').send(injectOG(html, meta));
+});
+
+// ============================================================
+// ملفات ثابتة (store.js/css، app-detail.js/css، submit.js/css، الحزم المشتركة...)
+// ============================================================
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send('User-agent: *\nAllow: /\n');
+});
+
+// أي مسار غير معروف يرجع للمتجر (بدل 404 فاضي)
+app.use((req, res) => res.redirect('/'));
+
+const PORT = process.env.PORT || 3000;
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`✅ apps server running on port ${PORT} (proxying /api to ${HOSTAKA_API_BASE})`));
+}
+
+module.exports = app;
