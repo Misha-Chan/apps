@@ -1,0 +1,104 @@
+/* ============================================================
+   apps.hostaka.fun — صفحة تطبيق فردية (/app.html?id=TOKEN)
+   ============================================================ */
+body.page-app-detail {background:var(--bg);color:var(--text);min-height:100vh;font-family:'Ubuntu','El Messiri',sans-serif;}
+body.page-app-detail .topbar {
+  position:sticky; top:0; left:0; right:0; height:58px; background:var(--topbar-bg);
+  backdrop-filter:blur(24px) saturate(1.3); -webkit-backdrop-filter:blur(24px) saturate(1.3);
+  border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;
+  padding:0 16px; z-index:50;
+}
+body.page-app-detail .back-btn {
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--card);
+  display:flex; align-items:center; justify-content:center; color:var(--text); flex-shrink:0; text-decoration:none;
+}
+body.page-app-detail .icon-btn {
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--card);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text);
+  transition:all var(--transition-fast); flex-shrink:0;
+}
+body.page-app-detail .icon-btn:hover {background:var(--primary-light);border-color:var(--primary-border);color:var(--primary);}
+body.page-app-detail .topbar-spacer {flex:1;}
+body.page-app-detail .lang-selector {position:relative;}
+body.page-app-detail .lang-menu {
+  position:absolute; top:calc(100% + 6px); left:0;
+  background:var(--modal-bg); border:1px solid var(--border); border-radius:var(--radius-md);
+  padding:6px 0; opacity:0; visibility:hidden; transform:translateY(-6px) scale(0.97);
+  transition:all 0.2s cubic-bezier(0.16,1,0.3,1); z-index:60; box-shadow:var(--shadow-lg); overflow:hidden; min-width:120px;
+}
+body.page-app-detail .lang-menu.show {opacity:1; visibility:visible; transform:translateY(0) scale(1);}
+body.page-app-detail .lang-menu button {display:block; width:100%; padding:9px 14px; background:none; border:none; color:var(--text); font-family:'Ubuntu','El Messiri'; font-size:0.85rem; cursor:pointer; text-align:right;}
+body.page-app-detail .lang-menu button:hover {background:var(--primary-light); color:var(--primary);}
+body.page-app-detail .acc-row {display:flex;align-items:center;gap:8px;}
+body.page-app-detail .acc-avatar, body.page-app-detail .acc-avatar-fallback {width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--avatar-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem;flex-shrink:0;}
+body.page-app-detail .acc-name {font-size:0.82rem;font-weight:700;color:var(--text);}
+
+body.page-app-detail .app-wrap {max-width:760px;margin:0 auto;padding:24px 16px 60px;}
+
+body.page-app-detail .app-head {display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;}
+body.page-app-detail .app-icon {width:88px;height:88px;border-radius:var(--radius-lg);overflow:hidden;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:900;color:var(--muted);flex-shrink:0;}
+body.page-app-detail .app-icon img {width:100%;height:100%;object-fit:cover;}
+body.page-app-detail .app-title {font-weight:900;font-size:1.3rem;line-height:1.35;}
+body.page-app-detail .app-publisher {font-size:0.86rem;color:var(--muted);margin-top:4px;}
+body.page-app-detail .app-rating-row {display:flex;align-items:center;gap:5px;margin-top:8px;font-size:0.84rem;color:var(--text);}
+body.page-app-detail .app-rating-row svg {color:#f5a623;}
+body.page-app-detail .app-downloads {color:var(--muted);}
+
+body.page-app-detail .dl-btn {
+  display:inline-flex; align-items:center; gap:8px; padding:11px 22px; border-radius:var(--radius-full);
+  background:var(--primary); color:#fff; border:none; font-family:'Ubuntu','El Messiri'; font-weight:700;
+  font-size:0.9rem; cursor:pointer; margin-top:14px; text-decoration:none; transition:all var(--transition-fast);
+}
+body.page-app-detail .dl-btn:hover {background:var(--primary-h);}
+
+body.page-app-detail .warning-banner {display:flex;gap:8px;align-items:flex-start;background:rgba(255,149,0,0.1);color:#a16207;border-radius:var(--radius-md);padding:12px 14px;font-size:0.86rem;margin-bottom:18px;line-height:1.6;}
+body.page-app-detail .warning-banner svg {flex-shrink:0;margin-top:1px;}
+
+body.page-app-detail .section-title {font-weight:800;font-size:1rem;margin:24px 0 12px;}
+body.page-app-detail .app-desc {font-size:0.9rem;line-height:1.85;color:var(--text);white-space:pre-wrap;}
+
+body.page-app-detail .shots-row {display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;}
+body.page-app-detail .shot-thumb {height:280px;border-radius:var(--radius-md);cursor:pointer;flex-shrink:0;box-shadow:var(--shadow);display:block;}
+
+body.page-app-detail .lightbox {position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;visibility:hidden;transition:opacity 0.2s;}
+body.page-app-detail .lightbox.show {opacity:1;visibility:visible;}
+body.page-app-detail .lightbox img {max-width:92vw;max-height:88vh;border-radius:var(--radius-sm);}
+body.page-app-detail .lightbox-close {position:absolute;top:18px;right:18px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;}
+
+body.page-app-detail .review-form {background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;margin-bottom:18px;}
+body.page-app-detail .star-picker {display:flex;gap:4px;margin-bottom:12px;}
+body.page-app-detail .star-picker svg {width:26px;height:26px;cursor:pointer;color:var(--border);transition:color 0.1s;}
+body.page-app-detail .star-picker svg.filled {color:#f5a623;}
+body.page-app-detail .review-form textarea {
+  width:100%; min-height:70px; padding:11px 14px; border-radius:var(--radius-md); border:1px solid var(--border);
+  background:var(--input-bg); color:var(--text); font-family:'Ubuntu','El Messiri'; font-size:0.86rem; resize:vertical; outline:none; margin-bottom:10px;
+}
+body.page-app-detail .review-form button {
+  padding:9px 20px; border-radius:var(--radius-full); background:var(--primary); color:#fff; border:none;
+  font-family:'Ubuntu','El Messiri'; font-weight:700; font-size:0.84rem; cursor:pointer;
+}
+body.page-app-detail .login-hint {text-align:center;padding:16px;color:var(--muted);font-size:0.85rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:18px;}
+body.page-app-detail .login-hint a {color:var(--primary);font-weight:700;text-decoration:none;}
+
+body.page-app-detail .review-item {padding:14px 0;border-bottom:1px solid var(--border);}
+body.page-app-detail .review-item:last-child {border-bottom:none;}
+body.page-app-detail .review-head {display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+body.page-app-detail .review-avatar {width:28px;height:28px;border-radius:50%;background:var(--avatar-gradient);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.75rem;flex-shrink:0;overflow:hidden;}
+body.page-app-detail .review-avatar img {width:100%;height:100%;object-fit:cover;}
+body.page-app-detail .review-name {font-weight:700;font-size:0.84rem;}
+body.page-app-detail .review-stars {color:#f5a623;display:flex;gap:1px;}
+body.page-app-detail .review-stars svg {width:12px;height:12px;}
+body.page-app-detail .review-comment {font-size:0.86rem;line-height:1.7;color:var(--text);margin-top:4px;}
+body.page-app-detail .review-date {font-size:0.72rem;color:var(--muted);margin-right:auto;}
+
+body.page-app-detail .not-found {text-align:center;padding:80px 20px;color:var(--muted);}
+body.page-app-detail .not-found svg {opacity:0.5;margin-bottom:14px;}
+
+body.page-app-detail .loader {position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:100;}
+body.page-app-detail .spinner {width:34px;height:34px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--primary);animation:appd-spin 0.8s linear infinite;}
+@keyframes appd-spin {to {transform:rotate(360deg);}}
+
+body.page-app-detail #toastHost {position:fixed;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:24px;pointer-events:none;z-index:999;}
+body.page-app-detail .toast {background:var(--primary);color:#fff;padding:11px 22px;border-radius:var(--radius-sm);font-size:0.85rem;font-weight:700;opacity:0;transition:opacity var(--transition-base);max-width:90vw;text-align:center;}
+body.page-app-detail .toast.show {opacity:1;}
+body.page-app-detail .toast.toast-error {background:var(--danger);}
