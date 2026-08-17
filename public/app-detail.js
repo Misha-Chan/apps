@@ -122,7 +122,7 @@ window.doDownload = doDownload;
 
 function renderApp(app){
   CURRENT_APP = app;
-  document.title = `${app.name} · App Store · Hostaka`;
+  document.title = `${app.name} · Hostaka Apps`;
   const initial = esc((app.name || '?').charAt(0).toUpperCase());
   const screenshots = (() => { try { return JSON.parse(app.screenshots || '[]'); } catch (e) { return []; } })();
 
