@@ -19,7 +19,7 @@ function starsLabel(app){
 function appCardHtml(app){
   const initial = esc((app.name || '?').charAt(0).toUpperCase());
   return `
-    <a class="app-card" href="/app.html?id=${encodeURIComponent(app.token)}">
+    <a class="app-card" href="/app?id=${encodeURIComponent(app.token)}">
       <div class="app-card-icon">${app.icon ? `<img src="${esc(app.icon)}" alt="">` : initial}</div>
       <div class="app-card-name">${esc(app.name)}</div>
       <div class="app-card-meta">

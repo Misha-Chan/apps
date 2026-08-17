@@ -17,8 +17,8 @@ apps/
 ├── .env.example
 └── public/
     ├── index.html / store.js / store.css        ← صفحة تصفح المتجر (/)
-    ├── app.html / app-detail.js / app-detail.css ← صفحة تطبيق فردي (/app.html?id=TOKEN)
-    ├── submit.html / submit.js / submit.css      ← صفحة نشر تطبيق (/submit.html)
+    ├── app.html / app-detail.js / app-detail.css ← صفحة تطبيق فردي (/app?id=TOKEN)
+    ├── submit.html / submit.js / submit.css      ← صفحة نشر تطبيق (/submit)
     ├── common.js                                 ← إعدادات مشتركة (oauth/ثيم/لغة/api) بين الصفحات الثلاث
     ├── theme.css / shared.css / shared.js
     ├── emoji.css / emoji.js / emoji-catalog.json
@@ -58,7 +58,7 @@ apps/
 
 ## حقن Open Graph لصفحة التطبيق الفردية
 
-لما حد يشارك رابط `/app.html?id=TOKEN`، `server.js` يجيب بيانات التطبيق
+لما حد يشارك رابط `/app?id=TOKEN`، `server.js` يجيب بيانات التطبيق
 من `GET /api/apps/:token` على السيرفر الرئيسي **قبل** ما يرسل الصفحة،
 ويحقن اسم التطبيق ووصفه وأيقونته كوسوم `<meta>` بالـ `<head>` — عشان
 بوتات واتساب/تويتر/ديسكورد (اللي ما تنفّذ جافاسكريبت) تشوف معاينة

@@ -1,5 +1,5 @@
 // ============================================================
-//  apps.hostaka.fun — صفحة نشر تطبيق (/submit.html)
+//  apps.hostaka.fun — صفحة نشر تطبيق (/submit)
 // ============================================================
 const CATEGORIES = ['Tools', 'Games', 'Social', 'Productivity', 'Education', 'Entertainment', 'Other'];
 const CATEGORY_I18N = {

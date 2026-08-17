@@ -114,9 +114,9 @@ function requestUrl(req) {
   return `https://${req.get('host')}${req.originalUrl}`;
 }
 
-// صفحة تطبيق فردية (/app.html?id=TOKEN) — نجيب بيانات التطبيق من الـ API
+// صفحة تطبيق فردية (/app?id=TOKEN) — نجيب بيانات التطبيق من الـ API
 // العام على السيرفر الرئيسي عشان نحقن معاينة صحيحة (اسم + وصف + أيقونة)
-app.get('/app.html', async (req, res) => {
+app.get('/app', async (req, res) => {
   const meta = {
     title: `App Store · ${SITE_NAME}`,
     description: DEFAULT_DESC,
@@ -161,13 +161,21 @@ app.get('/', (req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8').send(injectOG(html, meta));
 });
 
+// صفحة نشر تطبيق — خاصة (تتطلب تسجيل دخول)، بدون فهرسة، بنفس نمط
+// sendPrivate المستخدم بـ console/orbithub بالضبط
+function sendPrivate(res, fileName) {
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  res.sendFile(path.join(__dirname, 'public', fileName));
+}
+app.get('/submit', (req, res) => sendPrivate(res, 'submit.html'));
+
 // ============================================================
 // ملفات ثابتة (store.js/css، app-detail.js/css، submit.js/css، الحزم المشتركة...)
 // ============================================================
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send('User-agent: *\nAllow: /\n');
+  res.type('text/plain').send('User-agent: *\nAllow: /\nDisallow: /submit\n');
 });
 
 // أي مسار غير معروف يرجع للمتجر (بدل 404 فاضي)
