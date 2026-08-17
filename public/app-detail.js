@@ -1,5 +1,5 @@
 // ============================================================
-//  apps.hostaka.fun — صفحة تطبيق فردية (/app.html?id=TOKEN)
+//  apps.hostaka.fun — صفحة تطبيق فردية (/app?id=TOKEN)
 // ============================================================
 let CURRENT_APP = null;
 let pickedRating = 0;
