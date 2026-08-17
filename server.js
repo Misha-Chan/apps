@@ -1,5 +1,5 @@
 // ============================================================
-//  apps — سيرفر مستقل يخدّم متجر التطبيقات (apps.hostaka.fun)
+//  apps — سيرفر مستقل يخدّم تطبيقات هوستاكا (Hostaka Apps) — apps.hostaka.fun
 //  كل منطق المصادقة/قاعدة البيانات يبقى على السيرفر الرئيسي (hostaka.fun)؛
 //  هذا السيرفر واجهة + بروكسي شفاف لـ /api/* تجاهه، بنفس أسلوب
 //  orbithub/aethercast/console بالضبط.
@@ -57,8 +57,8 @@ app.use('/api', express.raw({ type: '*/*', limit: '10mb' }), async (req, res) =>
 // وأيقونة صحيحة بـ <head> قبل ما نرسل الصفحة، عشان بوتات
 // واتساب/تويتر/ديسكورد (اللي ما تنفّذ جافاسكريبت) تشوف معاينة صحيحة.
 // ============================================================
-const SITE_NAME    = 'apps';
-const DEFAULT_DESC = 'App Store من هوستاكا — تصفح ونزّل تطبيقات المجتمع، أو انشر تطبيقك.';
+const SITE_NAME    = 'Hostaka Apps';
+const DEFAULT_DESC = 'Hostaka Apps — تصفح ونزّل تطبيقات المجتمع، أو انشر تطبيقك.';
 const DEFAULT_IMG  = '/apps-icon.png';
 
 function ogEscape(str) {
@@ -118,7 +118,7 @@ function requestUrl(req) {
 // العام على السيرفر الرئيسي عشان نحقن معاينة صحيحة (اسم + وصف + أيقونة)
 app.get('/app', async (req, res) => {
   const meta = {
-    title: `App Store · ${SITE_NAME}`,
+    title: SITE_NAME,
     description: DEFAULT_DESC,
     image: selfUrl(req, DEFAULT_IMG),
     url: requestUrl(req),
@@ -132,7 +132,7 @@ app.get('/app', async (req, res) => {
       if (r.ok) {
         const appData = await r.json();
         if (appData && !appData.error) {
-          meta.title = `${appData.name} · App Store`;
+          meta.title = `${appData.name} · ${SITE_NAME}`;
           meta.description = ogTruncate(appData.description) || DEFAULT_DESC;
           if (appData.icon) meta.image = absUrl(req, appData.icon);
         }
@@ -147,11 +147,11 @@ app.get('/app', async (req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8').send(injectOG(html, meta));
 });
 
-// الصفحة الرئيسية (متجر التطبيقات) — ميتاداتا ثابتة، بس نحقنها بنفس الطريقة
+// الصفحة الرئيسية (Hostaka Apps) — ميتاداتا ثابتة، بس نحقنها بنفس الطريقة
 // عشان يكون فيه og:url صحيح ديناميكياً
 app.get('/', (req, res) => {
   const meta = {
-    title: `App Store · ${SITE_NAME}`,
+    title: SITE_NAME,
     description: DEFAULT_DESC,
     image: selfUrl(req, DEFAULT_IMG),
     url: requestUrl(req),
