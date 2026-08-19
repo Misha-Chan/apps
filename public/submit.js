@@ -107,7 +107,7 @@ async function onIconPicked(e){
   const file = e.target.files[0];
   if (!file) return;
   try {
-    const url = await uploadImage(file);
+    const url = await uploadImage(file, 512); // أيقونة صغيرة، ما تحتاج أبعاد كبيرة
     iconUrl = url;
     document.getElementById('iconPreview').innerHTML = `<img src="${esc(url)}" alt="">`;
   } catch (err) { showToast(t('submit.uploadFail'), 'error'); }
