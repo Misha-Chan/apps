@@ -135,6 +135,7 @@ app.get('/app', async (req, res) => {
           meta.title = `${appData.name} · ${SITE_NAME}`;
           meta.description = ogTruncate(appData.description) || DEFAULT_DESC;
           if (appData.icon) meta.image = absUrl(req, appData.icon);
+          else meta.image = `${HOSTAKA_API_BASE}/api/og-image?type=app&brand=apps&token=${encodeURIComponent(token)}`;
         }
       }
     } catch (e) {
@@ -175,7 +176,47 @@ app.get('/submit', (req, res) => sendPrivate(res, 'submit.html'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send('User-agent: *\nAllow: /\nDisallow: /submit\n');
+  const origin = `https://${req.get('host')}`;
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /submit\n\nSitemap: ${origin}/sitemap.xml\n`);
+});
+
+// ============================================================
+// sitemap.xml — Hostaka Apps (apps.hostaka.fun), part of the Hostaka
+// Ecosystem. Hostaka's app store — browse and download community apps.
+// Dynamically generated from the main Hostaka API (every approved app),
+// same pattern used by hostaka.fun/sitemap.xml, so Google can discover
+// and index this subdomain's content directly instead of waiting on
+// random crawling.
+// ============================================================
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const origin = `https://${req.get('host')}`;
+    const urls = [];
+    const addUrl = (loc, lastmod, priority) => {
+      urls.push(`  <url><loc>${ogEscape(loc)}</loc>${lastmod ? `<lastmod>${new Date(lastmod).toISOString()}</lastmod>` : ''}<priority>${priority}</priority></url>`);
+    };
+
+    addUrl(`${origin}/`, null, '1.0');
+
+    try {
+      const r = await fetch(`${HOSTAKA_API_BASE}/api/apps`);
+      if (r.ok) {
+        const apps = await r.json();
+        for (const a of apps) {
+          if (a.token) addUrl(`${origin}/app?id=${encodeURIComponent(a.token)}`, a.created_at, '0.6');
+        }
+      }
+    } catch (e) { console.warn('sitemap: could not fetch apps', e.message); }
+
+    res.type('application/xml').send(
+`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join('\n')}
+</urlset>`);
+  } catch (e) {
+    console.error('❌ sitemap generation failed:', e);
+    res.status(500).type('text/plain').send('sitemap generation failed');
+  }
 });
 
 // أي مسار غير معروف يرجع للمتجر (بدل 404 فاضي)
