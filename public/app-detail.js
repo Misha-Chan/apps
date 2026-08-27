@@ -64,11 +64,10 @@ async function submitReview(){
 window.submitReview = submitReview;
 
 function reviewItemHtml(r){
-  const initial = esc((r.username || '?').charAt(0).toUpperCase());
   return `
     <div class="review-item">
       <div class="review-head">
-        <div class="review-avatar">${r.user_avatar ? `<img src="${esc(r.user_avatar)}" alt="">` : initial}</div>
+        <div class="review-avatar">${r.user_avatar ? `<img src="${esc(r.user_avatar)}" alt="">` : `<img src="/default-avatar.jpg" alt="">`}</div>
         <span class="review-name">${esc(r.username)}</span>
         <span class="review-stars">${starsRow(r.rating, '')}</span>
         <span class="review-date">${new Date(r.created_at).toLocaleDateString(currentLangSafe())}</span>
