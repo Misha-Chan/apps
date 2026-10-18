@@ -151,7 +151,7 @@ function renderApp(app){
 
     ${screenshots.length ? `
       <div class="section-title" data-i18n="app.screenshotsTitle">Screenshots</div>
-      <div class="shots-row">${screenshots.map(s => `<img class="shot-thumb" src="${esc(s)}" onclick="openLightbox('${esc(s)}')">`).join('')}</div>
+      <div class="shots-row">${screenshots.map(s => `<img class="shot-thumb" src="${esc(s)}" onclick="openLightbox('${escJs(s)}')">`).join('')}</div>
     ` : ''}
 
     <div class="section-title" data-i18n="app.reviewsTitle">Reviews</div>
